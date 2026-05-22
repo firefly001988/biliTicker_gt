@@ -79,12 +79,11 @@ jobs:
             ~/.cargo/registry
             ~/.cargo/git
             target
-          key: ${{ matrix.platform }}-${{ matrix.arch }}-cargo-${{ hashFiles('ticker_workspace/Cargo.toml') }}
+          key: ${{ matrix.platform }}-${{ matrix.arch }}-cargo-${{ hashFiles('Cargo.toml') }}
           restore-keys: |
             ${{ matrix.platform }}-${{ matrix.arch }}-cargo-
 
       - name: Build captcha-plugin
-        working-directory: ticker_workspace
         run: |
           cargo build --bin captcha-plugin --release --target ${{ matrix.rust-target }}
 
@@ -93,18 +92,18 @@ jobs:
         run: |
           COMMIT="${{ steps.set_commit.outputs.short }}"
           BIN_NAME="captcha-plugin"
-          SOURCE_FILE="ticker_workspace/target/${{ matrix.rust-target }}/release/${BIN_NAME}${{ matrix.ext }}"
+          SOURCE_FILE="target/${{ matrix.rust-target }}/release/${BIN_NAME}${{ matrix.ext }}"
           TARGET_BASE="${BIN_NAME}_${{ matrix.platform }}_${{ matrix.arch }}_${COMMIT}"
           mkdir -p release
           cp "$SOURCE_FILE" "release/${BIN_NAME}${{ matrix.ext }}"
-          tar -C release -czf "release/${TARGET_BASE}.tar.gz" "${BIN_NAME}${{ matrix.ext }}"
+          zip -j "release/${TARGET_BASE}.zip" "release/${BIN_NAME}${{ matrix.ext }}"
           rm -f "release/${BIN_NAME}${{ matrix.ext }}"
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
           name: captcha-plugin-${{ matrix.platform }}-${{ matrix.arch }}
-          path: release/*.tar.gz
+          path: release/*.zip
           if-no-files-found: error
 
   publish:
@@ -126,13 +125,13 @@ jobs:
 
       - name: Flatten artifact tree
         run: |
-          find release-assets -type f -name '*.tar.gz' -exec cp {} release-assets/ \;
+          find release-assets -type f -name '*.zip' -exec cp {} release-assets/ \;
 
       - name: Generate checksums
         run: |
           COMMIT="${{ steps.set_commit.outputs.short }}"
           cd release-assets
-          sha256sum *.tar.gz > "checksums_${COMMIT}.txt"
+          sha256sum *.zip > "checksums_${COMMIT}.txt"
 
       - name: Publish release
         uses: softprops/action-gh-release@v2
@@ -143,5 +142,5 @@ jobs:
           draft: false
           prerelease: false
           files: |
-            release-assets/*.tar.gz
+            release-assets/*.zip
             release-assets/checksums_*.txt
