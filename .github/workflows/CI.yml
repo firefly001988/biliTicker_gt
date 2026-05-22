@@ -72,6 +72,11 @@ jobs:
         with:
           targets: ${{ matrix.rust-target }}
 
+      - name: Install protoc
+        uses: arduino/setup-protoc@v3
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Cache Rust build
         uses: actions/cache@v4
         with:
@@ -108,7 +113,6 @@ jobs:
 
   publish:
     needs: build
-    if: "startsWith(github.ref, 'refs/tags/')"
     runs-on: ubuntu-latest
     steps:
       - name: Set commit hash
@@ -137,10 +141,25 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           token: "${{ secrets.GITHUB_TOKEN }}"
-          tag_name: "${{ github.ref_name }}"
-          name: "captcha-plugin ${{ github.ref_name }}"
+          tag_name: "${{ steps.set_commit.outputs.short }}"
+          name: "Build ${{ steps.set_commit.outputs.short }}"
           draft: false
           prerelease: false
           files: |
             release-assets/*.zip
             release-assets/checksums_*.txt
+
+      - name: Cleanup old releases (keep latest 10)
+        shell: bash
+        run: |
+          RELEASES=$(gh release list --repo "${{ github.repository }}" --limit 100 --json tagName,createdAt --jq 'sort_by(.createdAt) | reverse | .[].tagName')
+          COUNT=0
+          for TAG in $RELEASES; do
+            COUNT=$((COUNT + 1))
+            if [ $COUNT -gt 10 ]; then
+              echo "Deleting old release: $TAG"
+              gh release delete "$TAG" --repo "${{ github.repository }}" --yes --cleanup-tag
+            fi
+          done
+        env:
+          GH_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
