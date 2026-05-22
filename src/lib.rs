@@ -1,10 +1,9 @@
 #![recursion_limit = "256"]
-mod abstraction;
-mod click;
-mod error;
-mod py;
-mod slide;
-mod w;
+pub mod abstraction;
+pub mod click;
+pub mod error;
+pub mod slide;
+pub mod w;
 
 #[cfg(test)]
 mod tests {

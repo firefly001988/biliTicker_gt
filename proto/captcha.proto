@@ -1,0 +1,156 @@
+syntax = "proto3";
+
+package captcha;
+
+// =============================================================================
+// Enums
+// =============================================================================
+
+enum CaptchaType {
+  UNKNOWN = 0;
+  SLIDE = 1;
+  CLICK = 2;
+}
+
+// =============================================================================
+// Shared data structures
+// =============================================================================
+
+message GeetestCS {
+  string s = 1;
+  bytes c = 2;
+}
+
+message NewCSArgs {
+  bytes c = 1;
+  string s = 2;
+  string new_challenge = 3;
+  string full_bg_url = 4;
+  string miss_bg_url = 5;
+  string slider_url = 6;
+}
+
+// =============================================================================
+// SolveGeetestCaptcha
+// =============================================================================
+
+message SolveGeetestCaptchaRequest {
+  string gt = 1;
+  string challenge = 2;
+}
+
+message SolveGeetestCaptchaResponse {
+  bool success = 1;
+  string validate = 2;
+  string error = 3;
+}
+
+// =============================================================================
+// GetCS
+// =============================================================================
+
+message GetCSRequest {
+  string gt = 1;
+  string challenge = 2;
+  string w = 3;
+}
+
+message GetCSResponse {
+  bool success = 1;
+  GeetestCS cs = 2;
+  string error = 3;
+}
+
+// =============================================================================
+// GetType
+// =============================================================================
+
+message GetTypeRequest {
+  string gt = 1;
+  string challenge = 2;
+  string w = 3;
+}
+
+message GetTypeResponse {
+  bool success = 1;
+  CaptchaType type = 2;
+  string error = 3;
+}
+
+// =============================================================================
+// GetNewCSArgs
+// =============================================================================
+
+message GetNewCSArgsRequest {
+  string gt = 1;
+  string challenge = 2;
+}
+
+message GetNewCSArgsResponse {
+  bool success = 1;
+  NewCSArgs args = 2;
+  string error = 3;
+}
+
+// =============================================================================
+// CalculateKey
+// =============================================================================
+
+message CalculateKeyRequest {
+  string gt = 1;
+  string challenge = 2;
+  NewCSArgs args = 3;
+}
+
+message CalculateKeyResponse {
+  bool success = 1;
+  string key = 2;
+  string error = 3;
+}
+
+// =============================================================================
+// GenerateW
+// =============================================================================
+
+message GenerateWRequest {
+  string gt = 1;
+  string challenge = 2;
+  string key = 3;
+  NewCSArgs args = 4;
+}
+
+message GenerateWResponse {
+  bool success = 1;
+  string w = 2;
+  string error = 3;
+}
+
+// =============================================================================
+// Verify
+// =============================================================================
+
+message VerifyRequest {
+  string gt = 1;
+  string challenge = 2;
+  string w = 3;
+}
+
+message VerifyResponse {
+  bool success = 1;
+  string validate = 2;
+  string error = 3;
+}
+
+// =============================================================================
+// gRPC Service
+// =============================================================================
+
+service CaptchaService {
+  rpc Solve(SolveGeetestCaptchaRequest) returns (SolveGeetestCaptchaResponse);
+  rpc GetCS(GetCSRequest) returns (GetCSResponse);
+  rpc GetType(GetTypeRequest) returns (GetTypeResponse);
+  rpc GetNewCSArgs(GetNewCSArgsRequest) returns (GetNewCSArgsResponse);
+  rpc CalculateKey(CalculateKeyRequest) returns (CalculateKeyResponse);
+  rpc GenerateW(GenerateWRequest) returns (GenerateWResponse);
+  rpc Verify(VerifyRequest) returns (VerifyResponse);
+}
