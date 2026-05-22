@@ -31,11 +31,12 @@ jobs:
             os: windows-latest
             ext: .exe
             rust-target: x86_64-pc-windows-msvc
-          - platform: windows
-            arch: arm64
-            os: windows-11-arm
-            ext: .exe
-            rust-target: aarch64-pc-windows-msvc
+          # doesn't support arm64 yet
+          #- platform: windows
+          #  arch: arm64
+          #  os: windows-11-arm
+          #  ext: .exe
+          #  rust-target: aarch64-pc-windows-msvc
           - platform: linux
             arch: amd64
             os: ubuntu-24.04
@@ -101,14 +102,14 @@ jobs:
           TARGET_BASE="${BIN_NAME}_${{ matrix.platform }}_${{ matrix.arch }}_${COMMIT}"
           mkdir -p release
           cp "$SOURCE_FILE" "release/${BIN_NAME}${{ matrix.ext }}"
-          zip -j "release/${TARGET_BASE}.zip" "release/${BIN_NAME}${{ matrix.ext }}"
+          tar -C release -czf "release/${TARGET_BASE}.tar.gz" "${BIN_NAME}${{ matrix.ext }}"
           rm -f "release/${BIN_NAME}${{ matrix.ext }}"
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
           name: captcha-plugin-${{ matrix.platform }}-${{ matrix.arch }}
-          path: release/*.zip
+          path: release/*.tar.gz
           if-no-files-found: error
 
   publish:
@@ -129,13 +130,13 @@ jobs:
 
       - name: Flatten artifact tree
         run: |
-          find release-assets -type f -name '*.zip' -exec cp {} release-assets/ \;
+          find release-assets -type f -name '*.tar.gz' -exec cp {} release-assets/ \;
 
       - name: Generate checksums
         run: |
           COMMIT="${{ steps.set_commit.outputs.short }}"
           cd release-assets
-          sha256sum *.zip > "checksums_${COMMIT}.txt"
+          sha256sum *.tar.gz > "checksums_${COMMIT}.txt"
 
       - name: Publish release
         uses: softprops/action-gh-release@v2
@@ -146,7 +147,7 @@ jobs:
           draft: false
           prerelease: false
           files: |
-            release-assets/*.zip
+            release-assets/*.tar.gz
             release-assets/checksums_*.txt
 
       - name: Cleanup old releases (keep latest 10)
