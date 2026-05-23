@@ -18,6 +18,10 @@ pub mod captcha_proto {
     tonic::include_proto!("captcha");
 }
 
+pub mod health_proto {
+    tonic::include_proto!("grpc.health.v1");
+}
+
 use captcha_proto::captcha_service_server::{CaptchaService, CaptchaServiceServer};
 use captcha_proto::{
     CalculateKeyRequest, CalculateKeyResponse, CaptchaType,
@@ -30,6 +34,10 @@ use captcha_proto::{
     VersionRequest, VersionResponse,
 };
 use tonic::{Request, Response, Status};
+
+use health_proto::health_check_response::ServingStatus;
+use health_proto::health_server::{Health, HealthServer};
+use health_proto::{HealthCheckRequest, HealthCheckResponse};
 
 use crate::abstraction::{Api, GenerateW};
 use crate::click::Click;
@@ -341,6 +349,25 @@ impl CaptchaService for CaptchaServiceImpl {
 }
 
 // =============================================================================
+// gRPC Health Check Service (grpc.health.v1.Health)
+// =============================================================================
+
+#[derive(Default)]
+pub struct HealthServiceImpl;
+
+#[tonic::async_trait]
+impl Health for HealthServiceImpl {
+    async fn check(
+        &self,
+        _request: Request<HealthCheckRequest>,
+    ) -> Result<Response<HealthCheckResponse>, Status> {
+        Ok(Response::new(HealthCheckResponse {
+            status: ServingStatus::Serving as i32,
+        }))
+    }
+}
+
+// =============================================================================
 // Main – go-plugin gRPC handshake
 // =============================================================================
 
@@ -360,7 +387,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // 3. Serve gRPC.
     let svc = CaptchaServiceImpl::default();
+    let health_svc = HealthServiceImpl::default();
     tonic::transport::Server::builder()
+        .add_service(HealthServer::new(health_svc))
         .add_service(CaptchaServiceServer::new(svc))
         .serve_with_incoming(incoming)
         .await?;
