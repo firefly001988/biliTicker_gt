@@ -153,10 +153,23 @@ message VersionResponse {
 }
 
 // =============================================================================
-// gRPC Service
+// gRPC Services – Click and Slide are separate so each implementation
+// can be optimised independently and stdout pollution from dependency
+// library download progress is scoped to the service that triggers it.
 // =============================================================================
 
-service CaptchaService {
+service ClickService {
+  rpc Solve(SolveGeetestCaptchaRequest) returns (SolveGeetestCaptchaResponse);
+  rpc GetCS(GetCSRequest) returns (GetCSResponse);
+  rpc GetType(GetTypeRequest) returns (GetTypeResponse);
+  rpc GetNewCSArgs(GetNewCSArgsRequest) returns (GetNewCSArgsResponse);
+  rpc CalculateKey(CalculateKeyRequest) returns (CalculateKeyResponse);
+  rpc GenerateW(GenerateWRequest) returns (GenerateWResponse);
+  rpc Verify(VerifyRequest) returns (VerifyResponse);
+  rpc Version(VersionRequest) returns (VersionResponse);
+}
+
+service SlideService {
   rpc Solve(SolveGeetestCaptchaRequest) returns (SolveGeetestCaptchaResponse);
   rpc GetCS(GetCSRequest) returns (GetCSResponse);
   rpc GetType(GetTypeRequest) returns (GetTypeResponse);
