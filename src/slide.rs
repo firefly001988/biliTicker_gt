@@ -6,6 +6,7 @@ use image::{DynamicImage, GenericImage};
 use reqwest::blocking::Client;
 use serde_json::Value;
 use std::collections::HashMap;
+use std::time::Duration;
 use captcha_breaker::captcha::Slide0;
 use crate::w::slide_calculate;
 
@@ -16,8 +17,12 @@ pub struct Slide {
 
 impl Default for Slide {
     fn default() -> Self {
+        let client = Client::builder()
+            .timeout(Duration::from_secs(30))
+            .build()
+            .expect("failed to build HTTP client");
         Slide {
-            client: Client::new(),
+            client,
             verify_type: VerifyType::Slide,
         }
     }

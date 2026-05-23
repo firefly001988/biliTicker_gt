@@ -19,8 +19,12 @@ pub struct Click {
 impl Default for Click {
     fn default() -> Self {
         let env = captcha_breaker::environment::CaptchaEnvironment::default();
+        let client = Client::builder()
+            .timeout(Duration::from_secs(30))
+            .build()
+            .expect("failed to build HTTP client");
         Click {
-            client: Client::new(),
+            client,
             verify_type: VerifyType::Click,
             cb: env.load_captcha_breaker::<ChineseClick0>().unwrap(),
         }

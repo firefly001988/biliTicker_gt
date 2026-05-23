@@ -12,7 +12,6 @@ mod server;
 mod slide;
 mod w;
 
-
 // Include the generated proto code.
 pub mod captcha_proto {
     tonic::include_proto!("captcha");
@@ -385,7 +384,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     eprintln!("captcha-plugin: listening on {addr}");
     println!("1|1|tcp|{addr}|grpc");
 
-    // 3. Serve gRPC.
+    // 3. Override stdout to a file for plugin logs.
+    use stdio_override::StdoutOverride;
+    use std::fs;
+    let file_name = "./captcha.log";
+    let guard = StdoutOverride::from_file(file_name)?;
+    
+    // 4. Serve gRPC.
     let svc = CaptchaServiceImpl::default();
     let health_svc = HealthServiceImpl::default();
     tonic::transport::Server::builder()
@@ -393,6 +398,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .add_service(CaptchaServiceServer::new(svc))
         .serve_with_incoming(incoming)
         .await?;
+
+    drop(guard);
 
     Ok(())
 }
