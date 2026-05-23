@@ -27,6 +27,7 @@ use captcha_proto::{
     GetTypeRequest, GetTypeResponse,
     SolveGeetestCaptchaRequest, SolveGeetestCaptchaResponse,
     VerifyRequest, VerifyResponse,
+    VersionRequest, VersionResponse,
 };
 use tonic::{Request, Response, Status};
 
@@ -326,6 +327,16 @@ impl CaptchaService for CaptchaServiceImpl {
                 error: e.to_string(),
             })),
         }
+    }
+
+    async fn version(
+        &self,
+        _req: Request<VersionRequest>,
+    ) -> Result<Response<VersionResponse>, Status> {
+        Ok(Response::new(VersionResponse {
+            git_commit: env!("GIT_COMMIT").to_string(),
+            version: env!("CARGO_PKG_VERSION").to_string(),
+        }))
     }
 }
 
